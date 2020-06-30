@@ -4,6 +4,10 @@
 
 # Amazon Elastic Block Store (EBS) CSI driver
 
+## Скорректированный релиз процесс
+
+см. [release process](RELEASE.md)
+
 ## Overview
 
 The [Amazon Elastic Block Store](https://aws.amazon.com/ebs/) Container Storage Interface (CSI) Driver provides a [CSI](https://github.com/container-storage-interface/spec/blob/master/spec.md) interface used by Container Orchestrators to manage the lifecycle of Amazon EBS volumes.
