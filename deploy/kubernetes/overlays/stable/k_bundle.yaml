@@ -193,7 +193,7 @@ spec:
               key: access_key
               name: aws-secret
               optional: true
-        image: dhub.c2.croc.ru/kaas/aws-ebs-csi-driver:v0.5.0
+        image: dhub.c2.croc.ru/kaas/aws-ebs-csi-driver:v0.5.0-CROC1
         livenessProbe:
           failureThreshold: 5
           httpGet:
@@ -279,7 +279,7 @@ spec:
           value: unix:/csi/csi.sock
         - name: AWS_REGION
           value: croc
-        image: dhub.c2.croc.ru/kaas/aws-ebs-csi-driver:v0.5.0
+        image: dhub.c2.croc.ru/kaas/aws-ebs-csi-driver:v0.5.0-CROC1
         livenessProbe:
           failureThreshold: 5
           httpGet:
