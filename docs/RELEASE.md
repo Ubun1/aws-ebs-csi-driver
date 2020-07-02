@@ -26,6 +26,8 @@ REDHAT_SUPPORT_PRODUCT_VERSION=30
 PRIVACY_POLICY_URL="https://fedoraproject.org/wiki/Legal:PrivacyPolicy"
 # docker --version
 Docker version 19.03.12, build 48a66213fe
+# ./kustomize version
+{Version:kustomize/v3.6.1 GitCommit:c97fa946d576eb6ed559f17f2ac43b3b5a8d5dbd BuildDate:2020-05-27T20:47:35Z GoOs:linux GoArch:amd64}
 ```
 ## Версионирование
 
@@ -35,7 +37,14 @@ Docker version 19.03.12, build 48a66213fe
 
 ## Артефакты
 
-Релизным артефактом этой репы является докер имадж. Для его создания необходимы установленный и настроенный докер демон - https://docs.docker.com/get-docker/ . Для сборки имаджа необходимо:
+Релизными артефактами этой репы является докер имадж и deployment конфиги для бубернетеса. При любом новом релизе необходимо обновлять kustomization.yaml и генерить бандл (например при релизе v0.5.0-CROC1):
+- в файле deployment/kubernetes/stable/kustomization.yaml изменить ```newTag``` на новый актуальный (v0.5.0-CROC1)
+- используя утилиту [kustomize](https://github.com/kubernetes-sigs/kustomize) собрать сингл-yaml-файл бандл для деплоймента:
+```
+kustomize build ./deployment/kubernetes/stable/ > ./deployment/kubernetes/stable/k_bundle.yaml
+```
+
+Для создания докер имаджа необходимы установленный и настроенный докер демон - https://docs.docker.com/get-docker/ . Для сборки имаджа необходимо:
 - находясь в руте репы выполнить:
 ```docker build -t aws-ebs-csi-driver```
 - после успешной сборки протегировать имадж:
