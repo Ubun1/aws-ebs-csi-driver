@@ -55,7 +55,7 @@ spec:
             periodSeconds: 10
             failureThreshold: 5
         - name: node-driver-registrar
-          image: quay.io/k8scsi/csi-node-driver-registrar:v1.1.0
+          image: dhub.c2.croc.ru/kaas/csi-node-driver-registrar:v1.1.0
           args:
             - --csi-address=$(ADDRESS)
             - --kubelet-registration-path=$(DRIVER_REG_SOCK_PATH)
@@ -75,7 +75,7 @@ spec:
             - name: registration-dir
               mountPath: /registration
         - name: liveness-probe
-          image: quay.io/k8scsi/livenessprobe:v1.1.0
+          image: dhub.c2.croc.ru/kaas/livenessprobe:v1.1.0
           args:
             - --csi-address=/csi/csi.sock
           volumeMounts:
