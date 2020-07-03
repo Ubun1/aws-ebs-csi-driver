@@ -37,6 +37,7 @@ const (
 	defaultVoluemType = awscloud.VolumeTypeGP2
 
 	awsAvailabilityZonesEnv = "AWS_AVAILABILITY_ZONES"
+	crocRegionEnv           = "CROC_REGION"
 
 	dummyVolumeName = "pre-provisioned"
 )
@@ -71,7 +72,7 @@ var _ = Describe("[ebs-csi-e2e] [single-az] Pre-Provisioned", func() {
 		}
 		availabilityZones := strings.Split(os.Getenv(awsAvailabilityZonesEnv), ",")
 		availabilityZone := availabilityZones[rand.Intn(len(availabilityZones))]
-		region := availabilityZone[0 : len(availabilityZone)-1]
+		region := os.Getenv(crocRegionEnv)
 
 		diskOptions := &awscloud.DiskOptions{
 			CapacityBytes:    defaultDiskSizeBytes,
