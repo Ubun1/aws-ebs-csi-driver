@@ -78,6 +78,7 @@ const (
 	MaxTagKeyLength = 128
 	// MaxTagValueLength represents the maximum value length for a tag.
 	MaxTagValueLength = 256
+	MinTotalCapacity  = 8
 )
 
 // Defaults
@@ -448,6 +449,10 @@ func (c *cloud) CreateDisk(ctx context.Context, volumeName string, diskOptions *
 		createType = diskOptions.VolumeType
 	case VolumeTypeIO1, VolumeTypeIO2:
 		createType = diskOptions.VolumeType
+
+		if capacityGiB < MinTotalCapacity {
+			capacityGiB = MinTotalCapacity
+		}
 		iops = capacityGiB * int64(diskOptions.IOPSPerGB)
 		if iops < MinTotalIOPS {
 			iops = MinTotalIOPS
