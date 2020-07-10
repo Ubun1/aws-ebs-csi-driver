@@ -149,15 +149,6 @@ var _ = Describe("[ebs-csi-e2e] [single-az] Dynamic Provisioning", func() {
 							MountPathGenerate: "/mnt/test-",
 						},
 					},
-					{
-						VolumeType: awscloud.VolumeTypeIO1,
-						FSType:     ebscsidriver.FSTypeExt4,
-						ClaimSize:  driver.MinimumSizeForVolumeType(awscloud.VolumeTypeIO1),
-						VolumeMount: testsuites.VolumeMountDetails{
-							NameGenerate:      "test-volume-",
-							MountPathGenerate: "/mnt/test-",
-						},
-					},
 				},
 			},
 		}
@@ -177,20 +168,6 @@ var _ = Describe("[ebs-csi-e2e] [single-az] Dynamic Provisioning", func() {
 						VolumeType: awscloud.VolumeTypeGP2,
 						FSType:     ebscsidriver.FSTypeExt3,
 						ClaimSize:  driver.MinimumSizeForVolumeType(awscloud.VolumeTypeGP2),
-						VolumeMount: testsuites.VolumeMountDetails{
-							NameGenerate:      "test-volume-",
-							MountPathGenerate: "/mnt/test-",
-						},
-					},
-				},
-			},
-			{
-				Cmd: "echo 'hello world' > /mnt/test-1/data && grep 'hello world' /mnt/test-1/data",
-				Volumes: []testsuites.VolumeDetails{
-					{
-						VolumeType: awscloud.VolumeTypeIO1,
-						FSType:     ebscsidriver.FSTypeExt4,
-						ClaimSize:  driver.MinimumSizeForVolumeType(awscloud.VolumeTypeIO1),
 						VolumeMount: testsuites.VolumeMountDetails{
 							NameGenerate:      "test-volume-",
 							MountPathGenerate: "/mnt/test-",
@@ -237,15 +214,6 @@ var _ = Describe("[ebs-csi-e2e] [single-az] Dynamic Provisioning", func() {
 				Cmd: "dd if=/dev/zero of=/dev/xvda bs=1024k count=100 && echo 'hello world' > /mnt/test-1/data && grep 'hello world' /mnt/test-1/data",
 				Volumes: []testsuites.VolumeDetails{
 					{
-						VolumeType: awscloud.VolumeTypeIO1,
-						FSType:     ebscsidriver.FSTypeExt4,
-						ClaimSize:  driver.MinimumSizeForVolumeType(awscloud.VolumeTypeIO1),
-						VolumeMount: testsuites.VolumeMountDetails{
-							NameGenerate:      "test-volume-",
-							MountPathGenerate: "/mnt/test-",
-						},
-					},
-					{
 						VolumeType:   awscloud.VolumeTypeGP2,
 						FSType:       ebscsidriver.FSTypeExt4,
 						MountOptions: []string{"rw"},
@@ -275,20 +243,6 @@ var _ = Describe("[ebs-csi-e2e] [single-az] Dynamic Provisioning", func() {
 						VolumeType: awscloud.VolumeTypeGP2,
 						FSType:     ebscsidriver.FSTypeExt3,
 						ClaimSize:  driver.MinimumSizeForVolumeType(awscloud.VolumeTypeGP2),
-						VolumeMount: testsuites.VolumeMountDetails{
-							NameGenerate:      "test-volume-",
-							MountPathGenerate: "/mnt/test-",
-						},
-					},
-				},
-			},
-			{
-				Cmd: "while true; do echo $(date -u) >> /mnt/test-1/data; sleep 1; done",
-				Volumes: []testsuites.VolumeDetails{
-					{
-						VolumeType: awscloud.VolumeTypeIO1,
-						FSType:     ebscsidriver.FSTypeExt4,
-						ClaimSize:  driver.MinimumSizeForVolumeType(awscloud.VolumeTypeIO1),
 						VolumeMount: testsuites.VolumeMountDetails{
 							NameGenerate:      "test-volume-",
 							MountPathGenerate: "/mnt/test-",

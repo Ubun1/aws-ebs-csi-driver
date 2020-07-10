@@ -45,7 +45,7 @@ verify: bin/golangci-lint
 	echo "Congratulations! All Go source files have been linted."
 
 test:
-	go test -v -race ./cmd/... ./pkg/...
+	go test -v ./cmd/... ./pkg/...
 
 .PHONY: test-sanity
 test-sanity:

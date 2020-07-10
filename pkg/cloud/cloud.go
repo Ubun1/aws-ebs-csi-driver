@@ -55,11 +55,8 @@ const (
 var (
 	// ValidVolumeTypes represents list of available volume types
 	ValidVolumeTypes = []string{
-		VolumeTypeIO1,
 		VolumeTypeIO2,
 		VolumeTypeGP2,
-		VolumeTypeST2,
-		VolumeTypeStandard,
 	}
 )
 
