@@ -150,9 +150,9 @@ var _ = Describe("[ebs-csi-e2e] [single-az] Dynamic Provisioning", func() {
 						},
 					},
 					{
-						VolumeType: awscloud.VolumeTypeIO1,
+						VolumeType: awscloud.VolumeTypeIO2,
 						FSType:     ebscsidriver.FSTypeExt4,
-						ClaimSize:  driver.MinimumSizeForVolumeType(awscloud.VolumeTypeIO1),
+						ClaimSize:  driver.MinimumSizeForVolumeType(awscloud.VolumeTypeIO2),
 						VolumeMount: testsuites.VolumeMountDetails{
 							NameGenerate:      "test-volume-",
 							MountPathGenerate: "/mnt/test-",
@@ -188,9 +188,9 @@ var _ = Describe("[ebs-csi-e2e] [single-az] Dynamic Provisioning", func() {
 				Cmd: "echo 'hello world' > /mnt/test-1/data && grep 'hello world' /mnt/test-1/data",
 				Volumes: []testsuites.VolumeDetails{
 					{
-						VolumeType: awscloud.VolumeTypeIO1,
+						VolumeType: awscloud.VolumeTypeIO2,
 						FSType:     ebscsidriver.FSTypeExt4,
-						ClaimSize:  driver.MinimumSizeForVolumeType(awscloud.VolumeTypeIO1),
+						ClaimSize:  driver.MinimumSizeForVolumeType(awscloud.VolumeTypeIO2),
 						VolumeMount: testsuites.VolumeMountDetails{
 							NameGenerate:      "test-volume-",
 							MountPathGenerate: "/mnt/test-",
@@ -237,9 +237,9 @@ var _ = Describe("[ebs-csi-e2e] [single-az] Dynamic Provisioning", func() {
 				Cmd: "dd if=/dev/zero of=/dev/xvda bs=1024k count=100 && echo 'hello world' > /mnt/test-1/data && grep 'hello world' /mnt/test-1/data",
 				Volumes: []testsuites.VolumeDetails{
 					{
-						VolumeType: awscloud.VolumeTypeIO1,
+						VolumeType: awscloud.VolumeTypeIO2,
 						FSType:     ebscsidriver.FSTypeExt4,
-						ClaimSize:  driver.MinimumSizeForVolumeType(awscloud.VolumeTypeIO1),
+						ClaimSize:  driver.MinimumSizeForVolumeType(awscloud.VolumeTypeIO2),
 						VolumeMount: testsuites.VolumeMountDetails{
 							NameGenerate:      "test-volume-",
 							MountPathGenerate: "/mnt/test-",
@@ -286,9 +286,9 @@ var _ = Describe("[ebs-csi-e2e] [single-az] Dynamic Provisioning", func() {
 				Cmd: "while true; do echo $(date -u) >> /mnt/test-1/data; sleep 1; done",
 				Volumes: []testsuites.VolumeDetails{
 					{
-						VolumeType: awscloud.VolumeTypeIO1,
+						VolumeType: awscloud.VolumeTypeIO2,
 						FSType:     ebscsidriver.FSTypeExt4,
-						ClaimSize:  driver.MinimumSizeForVolumeType(awscloud.VolumeTypeIO1),
+						ClaimSize:  driver.MinimumSizeForVolumeType(awscloud.VolumeTypeIO2),
 						VolumeMount: testsuites.VolumeMountDetails{
 							NameGenerate:      "test-volume-",
 							MountPathGenerate: "/mnt/test-",
