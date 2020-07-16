@@ -118,18 +118,10 @@ func GetParameters(volumeType string, fsType string, encrypted bool) map[string]
 // MinimumSizeForVolumeType returns the minimum disk size for each volumeType
 func MinimumSizeForVolumeType(volumeType string) string {
 	switch volumeType {
-	case "st1":
-		return "500Gi"
-	case "sc1":
-		return "500Gi"
-	case "gp2":
-		return "1Gi"
-	case "io1":
-		return "4Gi"
-	case "standard":
-		return "10Gi"
+	case "st2":
+		return "32Gi"
 	default:
-		return "1Gi"
+		return "8Gi"
 	}
 }
 
