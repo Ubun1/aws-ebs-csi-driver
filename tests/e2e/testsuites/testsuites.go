@@ -22,8 +22,8 @@ import (
 
 	"github.com/kubernetes-csi/external-snapshotter/v2/pkg/apis/volumesnapshot/v1beta1"
 
-	snapshotclientset "github.com/kubernetes-csi/external-snapshotter/v2/pkg/client/clientset/versioned"
 	awscloud "github.com/c2devel/aws-ebs-csi-driver/pkg/cloud"
+	snapshotclientset "github.com/kubernetes-csi/external-snapshotter/v2/pkg/client/clientset/versioned"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	apps "k8s.io/api/apps/v1"
@@ -218,6 +218,9 @@ func NewTestPersistentVolumeClaim(c clientset.Interface, ns *v1.Namespace, claim
 	}
 }
 
+func NewTestPersistentVolumeClaimWithAccessMode() {
+}
+
 func NewTestPersistentVolumeClaimWithDataSource(c clientset.Interface, ns *v1.Namespace, claimSize string, volumeMode VolumeMode, sc *storagev1.StorageClass, dataSource *v1.TypedLocalObjectReference) *TestPersistentVolumeClaim {
 	mode := v1.PersistentVolumeFilesystem
 	if volumeMode == Block {
@@ -378,6 +381,60 @@ type TestDeployment struct {
 	podName    string
 }
 
+func NewTestDeploymentUpdatable(c clientset.Interface, ns *v1.Namespace, command string, pvc *v1.PersistentVolumeClaim, volumeName, mountPath string, readOnly bool) *TestDeployment {
+	generateName := "ebs-volume-tester-"
+	selectorValue := fmt.Sprintf("%s%d", generateName, rand.Int())
+	replicas := int32(1)
+	return &TestDeployment{
+		client:    c,
+		namespace: ns,
+		deployment: &apps.Deployment{
+			ObjectMeta: metav1.ObjectMeta{
+				GenerateName: generateName,
+			},
+			Spec: apps.DeploymentSpec{
+				Replicas: &replicas,
+				Selector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{"app": selectorValue},
+				},
+				Template: v1.PodTemplateSpec{
+					ObjectMeta: metav1.ObjectMeta{
+						Labels: map[string]string{"app": selectorValue},
+					},
+					Spec: v1.PodSpec{
+						Containers: []v1.Container{
+							{
+								Name:    "volume-tester",
+								Image:   imageutils.GetE2EImage(imageutils.Nginx),
+								Command: []string{"/bin/sh"},
+								Args:    []string{"-c", command},
+								VolumeMounts: []v1.VolumeMount{
+									{
+										Name:      volumeName,
+										MountPath: mountPath,
+										ReadOnly:  readOnly,
+									},
+								},
+							},
+						},
+						RestartPolicy: v1.RestartPolicyAlways,
+						Volumes: []v1.Volume{
+							{
+								Name: volumeName,
+								VolumeSource: v1.VolumeSource{
+									PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
+										ClaimName: pvc.Name,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 func NewTestDeployment(c clientset.Interface, ns *v1.Namespace, command string, pvc *v1.PersistentVolumeClaim, volumeName, mountPath string, readOnly bool) *TestDeployment {
 	generateName := "ebs-volume-tester-"
 	selectorValue := fmt.Sprintf("%s%d", generateName, rand.Int())
@@ -442,6 +499,14 @@ func (t *TestDeployment) Create() {
 	framework.ExpectNoError(err)
 	// always get first pod as there should only be one
 	t.podName = pods.Items[0].Name
+}
+
+func (t *TestDeployment) Update() {
+	var err error
+	updatedDeploymentSpec := t.deployment
+	updatedDeploymentSpec.Spec.Template.Spec.Containers[0].Image = imageutils.GetE2EImage(imageutils.NginxNew)
+	t.deployment, err = t.client.AppsV1().Deployments(t.namespace.Name).Update(updatedDeploymentSpec)
+	framework.ExpectNoError(err)
 }
 
 func (t *TestDeployment) WaitForPodReady() {

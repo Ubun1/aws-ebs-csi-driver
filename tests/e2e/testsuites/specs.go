@@ -19,7 +19,7 @@ import (
 
 	"github.com/c2devel/aws-ebs-csi-driver/tests/e2e/driver"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	clientset "k8s.io/client-go/kubernetes"
 	restclientset "k8s.io/client-go/rest"
@@ -130,6 +130,27 @@ func (pod *PodDetails) SetupDeployment(client clientset.Interface, namespace *v1
 	cleanupFuncs = append(cleanupFuncs, tpvc.Cleanup)
 	By("setting up the Deployment")
 	tDeployment := NewTestDeployment(client, namespace, pod.Cmd, tpvc.persistentVolumeClaim, fmt.Sprintf("%s%d", volume.VolumeMount.NameGenerate, 1), fmt.Sprintf("%s%d", volume.VolumeMount.MountPathGenerate, 1), volume.VolumeMount.ReadOnly)
+
+	cleanupFuncs = append(cleanupFuncs, tDeployment.Cleanup)
+	return tDeployment, cleanupFuncs
+}
+
+func (pod *PodDetails) SetupUpdatableDeployment(client clientset.Interface, namespace *v1.Namespace, csiDriver driver.DynamicPVTestDriver) (*TestDeployment, []func()) {
+	cleanupFuncs := make([]func(), 0)
+	volume := pod.Volumes[0]
+	By("setting up the StorageClass")
+	storageClass := csiDriver.GetDynamicProvisionStorageClass(driver.GetParameters(volume.VolumeType, volume.FSType, volume.Encrypted), volume.MountOptions, volume.ReclaimPolicy, volume.VolumeBindingMode, volume.AllowedTopologyValues, namespace.Name)
+	tsc := NewTestStorageClass(client, namespace, storageClass)
+	createdStorageClass := tsc.Create()
+	cleanupFuncs = append(cleanupFuncs, tsc.Cleanup)
+	By("setting up the PVC")
+	tpvc := NewTestPersistentVolumeClaim(client, namespace, volume.ClaimSize, volume.VolumeMode, &createdStorageClass)
+	tpvc.Create()
+	tpvc.WaitForBound()
+	tpvc.ValidateProvisionedPersistentVolume()
+	cleanupFuncs = append(cleanupFuncs, tpvc.Cleanup)
+	By("setting up the Deployment")
+	tDeployment := NewTestDeploymentUpdatable(client, namespace, pod.Cmd, tpvc.persistentVolumeClaim, fmt.Sprintf("%s%d", volume.VolumeMount.NameGenerate, 1), fmt.Sprintf("%s%d", volume.VolumeMount.MountPathGenerate, 1), volume.VolumeMount.ReadOnly)
 
 	cleanupFuncs = append(cleanupFuncs, tDeployment.Cleanup)
 	return tDeployment, cleanupFuncs

@@ -52,6 +52,33 @@ var _ = Describe("[ebs-csi-e2e] [single-az] Dynamic Provisioning", func() {
 		ebsDriver = driver.InitEbsCSIDriver()
 	})
 
+	It("should not remove disks in deployment update process", func() {
+		// dynamic_provisioning.go
+		// -> testsuites/dynamically_provisioned_deployment_update_tester.go
+		// - -> specs.go
+		// - - -> testsuites.go
+		// - - - -> (configure deployment)
+
+		pod := testsuites.PodDetails{
+			Cmd: "echo 'test'",
+			Volumes: testsuites.VolumeDetails{
+				VolumeType: awscloud.VolumeTypeGP2,
+				FSType:     ebscsidriver.FSTypeExt4,
+				ClaimSize:  driver.MinimumSizeForVolumeType(awscloud.VolumeTypeGP2),
+				VolumeMount: testsuites.VolumeMountDetails{
+					NameGenerate:      "test-volume-",
+					MountPathGenerate: "/mnt/test-",
+				},
+			},
+		}
+
+		test := testsuites.DynamicallyProvisionedDeploymentUpdateTest{
+			CSIDriver: ebsDriver,
+			Pod:       pod,
+		}
+		test.Run(cs, ns)
+	})
+
 	for _, t := range awscloud.ValidVolumeTypes {
 		for _, fs := range ebscsidriver.ValidFSTypes {
 			volumeType := t
