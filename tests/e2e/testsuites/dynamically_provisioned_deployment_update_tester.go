@@ -16,7 +16,7 @@ type DynamicallyProvisionedDeploymentUpdateTest struct {
 }
 
 func (t *DynamicallyProvisionedDeploymentUpdateTest) Run(client clientset.Interface, namespace *v1.Namespace) {
-	tdeployment, cleanup := t.Pod.SetupUpdatableDeployment(client, namespace, t.csiDriver)
+	tdeployment, cleanup := t.Pod.SetupUpdatableDeployment(client, namespace, t.CSIDriver)
 	By("creating the deployment")
 	tdeployment.Create()
 	//saveVolumeName
@@ -28,6 +28,7 @@ func (t *DynamicallyProvisionedDeploymentUpdateTest) Run(client clientset.Interf
 
 	By("update deployment")
 	tdeployment.Update()
+	By("check deployment status")
 	tdeployment.WaitForPodReady()
 
 	newVolumeName := tdeployment.deployment.Spec.Template.Spec.Volumes[0].Name

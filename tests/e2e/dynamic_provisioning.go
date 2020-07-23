@@ -37,7 +37,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 )
 
-var _ = Describe("[ebs-csi-e2e] [single-az] Dynamic Provisioning", func() {
+var simple = Describe("[ebs-csi-e2e] [simple] Object update", func() {
 	f := framework.NewDefaultFramework("ebs")
 
 	var (
@@ -61,13 +61,15 @@ var _ = Describe("[ebs-csi-e2e] [single-az] Dynamic Provisioning", func() {
 
 		pod := testsuites.PodDetails{
 			Cmd: "echo 'test'",
-			Volumes: testsuites.VolumeDetails{
-				VolumeType: awscloud.VolumeTypeGP2,
-				FSType:     ebscsidriver.FSTypeExt4,
-				ClaimSize:  driver.MinimumSizeForVolumeType(awscloud.VolumeTypeGP2),
-				VolumeMount: testsuites.VolumeMountDetails{
-					NameGenerate:      "test-volume-",
-					MountPathGenerate: "/mnt/test-",
+			Volumes: []testsuites.VolumeDetails{
+				{
+					VolumeType: awscloud.VolumeTypeGP2,
+					FSType:     ebscsidriver.FSTypeXfs,
+					ClaimSize:  driver.MinimumSizeForVolumeType(awscloud.VolumeTypeGP2),
+					VolumeMount: testsuites.VolumeMountDetails{
+						NameGenerate:      "test-volume-",
+						MountPathGenerate: "/mnt/test-",
+					},
 				},
 			},
 		}
@@ -77,6 +79,22 @@ var _ = Describe("[ebs-csi-e2e] [single-az] Dynamic Provisioning", func() {
 			Pod:       pod,
 		}
 		test.Run(cs, ns)
+	})
+})
+
+var _ = Describe("[ebs-csi-e2e] [single-az] Dynamic Provisioning", func() {
+	f := framework.NewDefaultFramework("ebs")
+
+	var (
+		cs        clientset.Interface
+		ns        *v1.Namespace
+		ebsDriver driver.PVTestDriver
+	)
+
+	BeforeEach(func() {
+		cs = f.ClientSet
+		ns = f.Namespace
+		ebsDriver = driver.InitEbsCSIDriver()
 	})
 
 	for _, t := range awscloud.ValidVolumeTypes {

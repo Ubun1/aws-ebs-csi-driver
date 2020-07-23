@@ -35,6 +35,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	clientset "k8s.io/client-go/kubernetes"
 	restclientset "k8s.io/client-go/rest"
+	clientutil "k8s.io/client-go/util/retry"
 	"k8s.io/kubernetes/test/e2e/framework"
 	e2edeployment "k8s.io/kubernetes/test/e2e/framework/deployment"
 	e2elog "k8s.io/kubernetes/test/e2e/framework/log"
@@ -404,15 +405,12 @@ func NewTestDeploymentUpdatable(c clientset.Interface, ns *v1.Namespace, command
 					Spec: v1.PodSpec{
 						Containers: []v1.Container{
 							{
-								Name:    "volume-tester",
-								Image:   imageutils.GetE2EImage(imageutils.Nginx),
-								Command: []string{"/bin/sh"},
-								Args:    []string{"-c", command},
+								Name:  "volume-tester",
+								Image: imageutils.GetE2EImage(imageutils.Nginx),
 								VolumeMounts: []v1.VolumeMount{
 									{
 										Name:      volumeName,
 										MountPath: mountPath,
-										ReadOnly:  readOnly,
 									},
 								},
 							},
@@ -502,11 +500,27 @@ func (t *TestDeployment) Create() {
 }
 
 func (t *TestDeployment) Update() {
-	var err error
-	updatedDeploymentSpec := t.deployment
-	updatedDeploymentSpec.Spec.Template.Spec.Containers[0].Image = imageutils.GetE2EImage(imageutils.NginxNew)
-	t.deployment, err = t.client.AppsV1().Deployments(t.namespace.Name).Update(updatedDeploymentSpec)
-	framework.ExpectNoError(err)
+	var updateErr error
+	deploymentsClient := t.client.AppsV1().Deployments(t.namespace.Name)
+	By("send api call")
+	retryErr := clientutil.RetryOnConflict(clientutil.DefaultRetry, func() error {
+		result, getErr := deploymentsClient.Get(t.deployment.Name, metav1.GetOptions{})
+		if getErr != nil {
+			By(fmt.Sprintf("Error in getting latest deployment: ... %s", err))
+		}
+		result.Spec.Template.Spec.Containers[0].Image = imageutils.GetE2EImage(imageutils.NginxNew)
+		t.deployment, updateErr = deploymentsClient.Update(result)
+		if updateErr != nil {
+			By("update error")
+			By(fmt.Sprintf("Error occured due to... %s", updateErr))
+		}
+		return updateErr
+	})
+	if retryErr != nil {
+		By("update retry error")
+		By(fmt.Sprintf("Error occured due to... %s", err))
+	}
+
 }
 
 func (t *TestDeployment) WaitForPodReady() {
