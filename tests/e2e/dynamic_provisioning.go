@@ -21,8 +21,10 @@ import (
 	"strings"
 
 	. "github.com/onsi/ginkgo"
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
 	restclientset "k8s.io/client-go/rest"
 	"k8s.io/kubernetes/test/e2e/framework"
@@ -36,6 +38,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 )
+
+func int32Ptr(i int32) *int32 { return &i }
 
 var simple = Describe("[ebs-csi-e2e] [simple] Object update", func() {
 	f := framework.NewDefaultFramework("ebs")
@@ -59,24 +63,46 @@ var simple = Describe("[ebs-csi-e2e] [simple] Object update", func() {
 		// - - -> testsuites.go
 		// - - - -> (configure deployment)
 
-		pod := testsuites.PodDetails{
-			Cmd: "echo 'test'",
-			Volumes: []testsuites.VolumeDetails{
-				{
-					VolumeType: awscloud.VolumeTypeGP2,
-					FSType:     ebscsidriver.FSTypeXfs,
-					ClaimSize:  driver.MinimumSizeForVolumeType(awscloud.VolumeTypeGP2),
-					VolumeMount: testsuites.VolumeMountDetails{
-						NameGenerate:      "test-volume-",
-						MountPathGenerate: "/mnt/test-",
+		deployment := &appsv1.Deployment{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "demo-deployment",
+			},
+			Spec: appsv1.DeploymentSpec{
+				Replicas: int32Ptr(2),
+				Selector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"app": "demo",
+					},
+				},
+				Template: v1.PodTemplateSpec{
+					ObjectMeta: metav1.ObjectMeta{
+						Labels: map[string]string{
+							"app": "demo",
+						},
+					},
+					Spec: v1.PodSpec{
+						Containers: []v1.Container{
+							{
+								Name:  "web",
+								Image: "nginx:1.12",
+								Ports: []v1.ContainerPort{
+									{
+										Name:          "http",
+										Protocol:      v1.ProtocolTCP,
+										ContainerPort: 80,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
 		}
 
 		test := testsuites.DynamicallyProvisionedDeploymentUpdateTest{
-			CSIDriver: ebsDriver,
-			Pod:       pod,
+			CSIDriver:     ebsDriver,
+			Deployment:    deployment,
+			UpdateImageTo: "nginx:1.14",
 		}
 		test.Run(cs, ns)
 	})

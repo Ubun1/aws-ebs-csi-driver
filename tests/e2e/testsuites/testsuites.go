@@ -35,7 +35,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	clientset "k8s.io/client-go/kubernetes"
 	restclientset "k8s.io/client-go/rest"
-	clientutil "k8s.io/client-go/util/retry"
 	"k8s.io/kubernetes/test/e2e/framework"
 	e2edeployment "k8s.io/kubernetes/test/e2e/framework/deployment"
 	e2elog "k8s.io/kubernetes/test/e2e/framework/log"
@@ -382,57 +381,6 @@ type TestDeployment struct {
 	podName    string
 }
 
-func NewTestDeploymentUpdatable(c clientset.Interface, ns *v1.Namespace, command string, pvc *v1.PersistentVolumeClaim, volumeName, mountPath string, readOnly bool) *TestDeployment {
-	generateName := "ebs-volume-tester-"
-	selectorValue := fmt.Sprintf("%s%d", generateName, rand.Int())
-	replicas := int32(1)
-	return &TestDeployment{
-		client:    c,
-		namespace: ns,
-		deployment: &apps.Deployment{
-			ObjectMeta: metav1.ObjectMeta{
-				GenerateName: generateName,
-			},
-			Spec: apps.DeploymentSpec{
-				Replicas: &replicas,
-				Selector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{"app": selectorValue},
-				},
-				Template: v1.PodTemplateSpec{
-					ObjectMeta: metav1.ObjectMeta{
-						Labels: map[string]string{"app": selectorValue},
-					},
-					Spec: v1.PodSpec{
-						Containers: []v1.Container{
-							{
-								Name:  "volume-tester",
-								Image: imageutils.GetE2EImage(imageutils.Nginx),
-								VolumeMounts: []v1.VolumeMount{
-									{
-										Name:      volumeName,
-										MountPath: mountPath,
-									},
-								},
-							},
-						},
-						RestartPolicy: v1.RestartPolicyAlways,
-						Volumes: []v1.Volume{
-							{
-								Name: volumeName,
-								VolumeSource: v1.VolumeSource{
-									PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
-										ClaimName: pvc.Name,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
 func NewTestDeployment(c clientset.Interface, ns *v1.Namespace, command string, pvc *v1.PersistentVolumeClaim, volumeName, mountPath string, readOnly bool) *TestDeployment {
 	generateName := "ebs-volume-tester-"
 	selectorValue := fmt.Sprintf("%s%d", generateName, rand.Int())
@@ -497,30 +445,6 @@ func (t *TestDeployment) Create() {
 	framework.ExpectNoError(err)
 	// always get first pod as there should only be one
 	t.podName = pods.Items[0].Name
-}
-
-func (t *TestDeployment) Update() {
-	var updateErr error
-	deploymentsClient := t.client.AppsV1().Deployments(t.namespace.Name)
-	By("send api call")
-	retryErr := clientutil.RetryOnConflict(clientutil.DefaultRetry, func() error {
-		result, getErr := deploymentsClient.Get(t.deployment.Name, metav1.GetOptions{})
-		if getErr != nil {
-			By(fmt.Sprintf("Error in getting latest deployment: ... %s", err))
-		}
-		result.Spec.Template.Spec.Containers[0].Image = imageutils.GetE2EImage(imageutils.NginxNew)
-		t.deployment, updateErr = deploymentsClient.Update(result)
-		if updateErr != nil {
-			By("update error")
-			By(fmt.Sprintf("Error occured due to... %s", updateErr))
-		}
-		return updateErr
-	})
-	if retryErr != nil {
-		By("update retry error")
-		By(fmt.Sprintf("Error occured due to... %s", err))
-	}
-
 }
 
 func (t *TestDeployment) WaitForPodReady() {
